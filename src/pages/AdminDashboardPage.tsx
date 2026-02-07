@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import CreateEventModal from '../components/CreateEventModal';
 import CreatePostModal from '../components/CreatePostModal';
+import EditEventModal from '../components/EditEventModal';
+import EditPostModal from '../components/EditPostModal';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer,
@@ -18,6 +20,8 @@ type AdminEvent = {
   capacity: number;
   waitlist: number;
   status: 'open' | 'almost_full' | 'full';
+  description?: string;
+  location?: string;
 };
 
 type AdminPost = {
@@ -28,6 +32,7 @@ type AdminPost = {
   likes: number;
   comments: number;
   category: string;
+  content?: string;
 };
 
 type Member = {
@@ -53,20 +58,20 @@ const AdminDashboardPage = () => {
 
   // Mock admin data
   const [events, setEvents] = useState<AdminEvent[]>([
-    { id: 1, title: "Web Dev Workshop", date: "Mar 15", registered: 28, capacity: 40, waitlist: 0, status: 'open' },
-    { id: 2, title: "Weekend Hackathon", date: "Mar 23-24", registered: 50, capacity: 50, waitlist: 3, status: 'full' },
-    { id: 3, title: "Git & GitHub Course", date: "Mar 19", registered: 65, capacity: 100, waitlist: 0, status: 'open' },
-    { id: 4, title: "AI Tools Workshop", date: "Apr 3", registered: 34, capacity: 35, waitlist: 0, status: 'almost_full' },
-    { id: 5, title: "Cybersecurity Basics", date: "Apr 10", registered: 45, capacity: 50, waitlist: 2, status: 'open' },
-    { id: 6, title: "Data Science Intro", date: "Mar 28", registered: 38, capacity: 40, waitlist: 0, status: 'almost_full' },
+    { id: 1, title: "Web Dev Workshop", date: "Mar 15", registered: 28, capacity: 40, waitlist: 0, status: 'open', description: "Learn React fundamentals with hands-on coding.", location: "Turing Building, Room 304" },
+    { id: 2, title: "Weekend Hackathon", date: "Mar 23-24", registered: 50, capacity: 50, waitlist: 3, status: 'full', description: "48-hour coding marathon with prizes for best projects.", location: "Innovation Lab" },
+    { id: 3, title: "Git & GitHub Course", date: "Mar 19", registered: 65, capacity: 100, waitlist: 0, status: 'open', description: "Master version control for your projects.", location: "Online (Teams)" },
+    { id: 4, title: "AI Tools Workshop", date: "Apr 3", registered: 34, capacity: 35, waitlist: 0, status: 'almost_full', description: "Exploring ChatGPT, Copilot, and other AI assistants.", location: "Tech Hub, Room 208" },
+    { id: 5, title: "Cybersecurity Basics", date: "Apr 10", registered: 45, capacity: 50, waitlist: 2, status: 'open', description: "Introduction to cybersecurity principles and practices.", location: "Security Lab, Building 2" },
+    { id: 6, title: "Data Science Intro", date: "Mar 28", registered: 38, capacity: 40, waitlist: 0, status: 'almost_full', description: "Basic data analysis with Python and Pandas.", location: "Data Lab, Room 105" },
   ]);
 
   const [posts, setPosts] = useState<AdminPost[]>([
-    { id: 1, title: "Welcome to New Semester", author: "Alex Chen", date: "2h ago", likes: 24, comments: 3, category: "announcement" },
-    { id: 2, title: "Hackathon Announcement", author: "Tech Team", date: "1d ago", likes: 42, comments: 12, category: "event" },
-    { id: 3, title: "Project Group Forming", author: "Maria R.", date: "3d ago", likes: 18, comments: 5, category: "opportunity" },
-    { id: 4, title: "Exam Study Session", author: "Study Group", date: "5d ago", likes: 32, comments: 8, category: "resource" },
-    { id: 5, title: "Summer Internships", author: "Career Center", date: "1w ago", likes: 56, comments: 15, category: "opportunity" },
+    { id: 1, title: "Welcome to New Semester", author: "Alex Chen", date: "2h ago", likes: 24, comments: 3, category: "announcement", content: "Welcome everyone to the new semester! Our first meet-up is scheduled for next Friday..." },
+    { id: 2, title: "Hackathon Announcement", author: "Tech Team", date: "1d ago", likes: 42, comments: 12, category: "event", content: "We're excited to announce our annual hackathon! Registration opens next week." },
+    { id: 3, title: "Project Group Forming", author: "Maria R.", date: "3d ago", likes: 18, comments: 5, category: "opportunity", content: "Looking for team members for a machine learning project. Contact me if interested!" },
+    { id: 4, title: "Exam Study Session", author: "Study Group", date: "5d ago", likes: 32, comments: 8, category: "resource", content: "We're organizing study sessions for the upcoming exams. Join our study groups!" },
+    { id: 5, title: "Summer Internships", author: "Career Center", date: "1w ago", likes: 56, comments: 15, category: "opportunity", content: "Several tech companies are offering summer internships. Apply before the deadline!" },
   ]);
 
   const [members, setMembers] = useState<Member[]>([
@@ -83,6 +88,10 @@ const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'posts' | 'analytics' | 'members'>('overview');
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [showEditEventModal, setShowEditEventModal] = useState(false);
+  const [showEditPostModal, setShowEditPostModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
+  const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null);
   const [dateRange, setDateRange] = useState('month'); // month, quarter, year
   const [reportType, setReportType] = useState('summary'); // summary, detailed, custom
 
@@ -245,6 +254,79 @@ const AdminDashboardPage = () => {
     ));
   };
 
+  // Edit functions
+  const editEvent = (eventId: number) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setShowEditEventModal(true);
+    }
+  };
+
+  const editPost = (postId: number) => {
+    const post = posts.find(p => p.id === postId);
+    if (post) {
+      setSelectedPost(post);
+      setShowEditPostModal(true);
+    }
+  };
+
+  // Update event function
+  const handleUpdateEvent = (eventId: number, eventData: {
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    location: string;
+    capacity: number;
+  }) => {
+    setEvents(events.map(event => {
+      if (event.id === eventId) {
+        return {
+          ...event,
+          title: eventData.title,
+          description: eventData.description,
+          date: `${eventData.date} • ${eventData.time}`,
+          capacity: eventData.capacity,
+          location: eventData.location
+        };
+      }
+      return event;
+    }));
+    alert(`Event "${eventData.title}" updated successfully!`);
+  };
+
+  // Update post function
+  const handleUpdatePost = (postId: number, postData: {
+    title: string;
+    content: string;
+    category: string;
+    scheduleForLater: boolean;
+    scheduledDate?: string;
+    scheduledTime?: string;
+  }) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          title: postData.title,
+          content: postData.content,
+          category: postData.category,
+          date: postData.scheduleForLater 
+            ? `Scheduled: ${postData.scheduledDate}` 
+            : 'Updated just now'
+        };
+      }
+      return post;
+    }));
+    
+    const message = postData.scheduleForLater
+      ? `Post "${postData.title}" rescheduled for ${postData.scheduledDate} ${postData.scheduledTime}`
+      : `Post "${postData.title}" updated successfully!`;
+      
+    alert(message);
+  };
+
   const handleCreateEvent = (eventData: {
     title: string;
     description: string;
@@ -260,7 +342,9 @@ const AdminDashboardPage = () => {
       registered: 0,
       capacity: eventData.capacity,
       waitlist: 0,
-      status: 'open'
+      status: 'open',
+      description: eventData.description,
+      location: eventData.location
     };
     
     setEvents([...events, newEvent]);
@@ -284,7 +368,8 @@ const AdminDashboardPage = () => {
         : 'Just now',
       likes: 0,
       comments: 0,
-      category: postData.category
+      category: postData.category,
+      content: postData.content
     };
     
     setPosts([newPost, ...posts]);
@@ -516,7 +601,7 @@ const AdminDashboardPage = () => {
                               View
                             </button>
                             <button
-                              onClick={() => {/* Edit functionality */}}
+                              onClick={() => editEvent(event.id)}
                               className="text-green-600 hover:text-green-800 text-sm"
                             >
                               Edit
@@ -564,7 +649,12 @@ const AdminDashboardPage = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                        <button 
+                          onClick={() => editPost(post.id)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => deletePost(post.id)}
                           className="text-red-600 hover:text-red-800 text-sm"
@@ -910,6 +1000,36 @@ const AdminDashboardPage = () => {
         onClose={() => setShowCreatePostModal(false)}
         onCreatePost={handleCreatePost}
       />
+
+      {/* Edit Modals */}
+      {selectedEvent && (
+        <EditEventModal
+          isOpen={showEditEventModal}
+          onClose={() => {
+            setShowEditEventModal(false);
+            setSelectedEvent(null);
+          }}
+          event={selectedEvent}
+          onUpdateEvent={handleUpdateEvent}
+        />
+      )}
+
+      {selectedPost && (
+        <EditPostModal
+          isOpen={showEditPostModal}
+          onClose={() => {
+            setShowEditPostModal(false);
+            setSelectedPost(null);
+          }}
+          post={{
+            id: selectedPost.id,
+            title: selectedPost.title,
+            content: selectedPost.content || `Content for "${selectedPost.title}" - This would be loaded from the database in a real app.`,
+            category: selectedPost.category
+          }}
+          onUpdatePost={handleUpdatePost}
+        />
+      )}
     </div>
   );
 };
