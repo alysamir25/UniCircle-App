@@ -159,7 +159,7 @@ UniCircle provides a unified solution with three core user experiences:
 - Mobile application
 - Advanced analytics
 - Integration with university systems
-- **Timeline: Semester 2, 2024**
+- **Timeline: Semester 2, 2027**
 
 ## 🤝 Support Required from University
 
