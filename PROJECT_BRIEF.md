@@ -195,7 +195,7 @@ UniCircle provides a unified solution with three core user experiences:
 git clone https://github.com/alysamir25/unicircle-app
 
 # Navigate to project directory
-cd unicycle-app
+cd unicircle-app
 
 # Install dependencies
 npm install
